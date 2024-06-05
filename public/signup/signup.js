@@ -11,7 +11,7 @@ async function signupPage (event) {
         const response = await axios.post('http://localhost:3000/user/signup', signupDetails);
         console.log('signed succesffully' ,response);
         alert('Succesfully signed');
-        window.location.href='../login/login.html';
+        window.location.href='..\login\login.html';
     }catch(error){
         console.log(error);
         alert('an error encounterd while signing up the page');

@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 
 
 const sequelize = require('./util/database');
-const userRoutes = require('./routes/signup');
+const userRoutes = require('./routes/user');
 
 const app = express();
 app.use(
