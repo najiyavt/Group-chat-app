@@ -48,3 +48,19 @@ button {
 button:hover {
     background-color: #5a6268;
 }
+
+p {
+    position: absolute;
+    bottom: 10px; 
+    left:40%; 
+    text-align: right;
+}
+
+p a {
+    color: blue;
+    text-decoration: none;
+}
+
+p a:hover {
+    text-decoration: underline;
+}
