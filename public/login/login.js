@@ -9,8 +9,9 @@ async function loginSubmit (event) {
         localStorage.setItem('token',response.data.token);
         console.log('Login details',response);
         alert('Login successfull');
+        window.location.href = '../chats/chats.html';
     }catch (error) {
-        console.error( error);
-        alert('An error occurred while logging in. Please try again.');
+        console.error('Error logging in:', error);
+        alert('Login failed. Please check your credentials and try again.');
     }
 }

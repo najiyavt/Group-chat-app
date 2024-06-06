@@ -3,18 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
-    <link rel="stylesheet" href="../style.css">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div class="chat-container">
-        <h1>Chat App</h1>
-        <div>
-            <input type="text" id="message-input" placeholder="Enter your message" required>
-            <button type="submit">Send</button>
+    <div class="chat-app">
+        <header class="chat-header">
+            <h1>Group Chat App</h1>
+        </header>
+        <a id="link" href="../login/login.html">Signout</a>
+        <div class="chat-container">
+            <div class="chat-box" id="chat-box">
+                <!-- Messages will be appended here -->
+            </div>
+            <pre id="users-list"> </pre>
+            <form id="message-form" onsubmit="addMessage(event)">
+                <input type="text" id="message-input" placeholder="Type a message..." required>
+                <button id="sendBtn" type="submit">Send</button>
+            </form>
         </div>
-    </div>
-</body>
+    </div> 
     <script src="./chats.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
+</body>
 </html>
