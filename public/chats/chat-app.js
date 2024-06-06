@@ -30,11 +30,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             headers: { 'Authorization': token }
         });
         console.log('Fetched response:', response.data);
-        console.log('Message response:', response.data.message);
 
         response.data.chat.forEach(chat => {
            addMessageToChatUi(chat)
         });
+        setInterval(async () => {
+            const newMessagesResponse = await axios.get('http://localhost:3000/chat-app', {
+                headers: { 'Authorization': token }
+            });
+            newMessagesResponse.data.chat.forEach(newChat => {
+                addMessageToChatUi(newChat);
+            });
+        }, 1000);
     } catch (error) {
         console.error('Error fetching message:', error);
         alert('An error occurred while fetching the message');
