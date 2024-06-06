@@ -9,7 +9,7 @@ async function loginSubmit (event) {
         localStorage.setItem('token',response.data.token);
         console.log('Login details',response);
         alert('Login successfull');
-        window.location.href = '../chats/chats.html';
+        window.location.href = '../chats/chat-app.html';
     }catch (error) {
         console.error('Error logging in:', error);
         alert('Login failed. Please check your credentials and try again.');

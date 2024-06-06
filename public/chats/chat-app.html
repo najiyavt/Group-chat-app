@@ -11,19 +11,19 @@
         <header class="chat-header">
             <h1>Group Chat App</h1>
         </header>
-        <a id="link" href="../login/login.html">Signout</a>
+        <a id="link" href="../login/login.html">Logout</a>
         <div class="chat-container">
             <div class="chat-box" id="chat-box">
                 <!-- Messages will be appended here -->
             </div>
             <pre id="users-list"> </pre>
-            <form id="message-form" onsubmit="addMessage(event)">
-                <input type="text" id="message-input" placeholder="Type a message..." required>
+            <form id="chats-form" onsubmit="addMessage(event)">
+                <input type="text" id="chats-input" placeholder="Type a message..." required>
                 <button id="sendBtn" type="submit">Send</button>
             </form>
         </div>
     </div> 
-    <script src="./chats.js"></script>
+    <script src="./chat-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
 </body>
 </html>
