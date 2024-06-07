@@ -1,16 +1,20 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
-const Chats = sequelize.define('Chats' , {
+const Messages = sequelize.define('Messages' , {
     
-    chats: {
-        type: Sequelize.TEXT,
-        allowNull: false
-    },
     name : {
         type: Sequelize.STRING , 
         allowNull: false,
     },
+    chats: {
+        type: Sequelize.TEXT,
+        allowNull: false
+    },
+    timestamp: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW 
+    },
     
 })
-module.exports = Chats;
+module.exports = Messages;

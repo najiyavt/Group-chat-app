@@ -1,3 +1,4 @@
+const { Sequelize } = require('sequelize');
 const Chats = require('../models/chat-app');
 const User= require('../models/user');
 
@@ -6,10 +7,7 @@ exports.postMessages = async ( req , res) => {
     console.log("I am in POST message!", chats, req.user.id );
 
     try{
-        // const user = await User.findByPk(req.user.id);
-        // if (!user) {
-        //     return res.status(404).json({ error: 'User not found' });
-        // }
+        
         const newchat = await Chats.create({
             UserId:req.user.id ,
             name:req.user.name,
@@ -25,7 +23,13 @@ exports.postMessages = async ( req , res) => {
 exports.getAllMessages = async (req, res) => {
    
     try {
+        const lastId = req.query.lastId || 0;
         let chat = await Chats.findAll({ 
+            where :{
+                id: {
+                    [Sequelize.Op.gt]:lastId
+                }
+            },
             include: { 
                 model: User,  
                 attributes: ['name']

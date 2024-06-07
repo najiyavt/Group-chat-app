@@ -9,7 +9,7 @@ const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat-app');
 
 const User = require('./models/user');
-const Chats = require('./models/chat-app');
+const Messages = require('./models/chat-app');
 
 app.use(
     cors({
@@ -21,8 +21,8 @@ app.use(bodyParser.json());
 app.use('/user' , userRoutes);
 app.use('/chat-app' , chatRoutes);
 
-User.hasMany(Chats);
-Chats.belongsTo(User);
+User.hasMany(Messages);
+Messages.belongsTo(User);
 
 sequelize
     .sync()
