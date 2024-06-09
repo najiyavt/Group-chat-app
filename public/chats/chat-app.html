@@ -10,19 +10,32 @@
     <div class="chat-app">
         <header class="chat-header">
             <h1>Group Chat App</h1>
+            <a id="link" href="../login/login.html">Logout</a>
         </header>
-        <a id="link" href="../login/login.html">Logout</a>
         <div class="chat-container">
-            <div class="chat-box" id="chat-box">
-                <!-- Messages will be appended here -->
+            <aside class="groups">
+                <button id="createGroupBtn">Create Group</button>
+                <ul id="groups-list"></ul>
+                <div id="groupMembers" style="display: none;">
+                    <h2>Group Members</h2>
+                    <!-- Member list will be appended here -->
+                </div>
+            </aside>
+            <div class="main-content">
+                <div id="group-name" class="group-name"></div>
+                <main class="chat-box" id="chat-box">
+                    <!-- Messages will be appended here -->
+                </main>
+                
+                <section class="message-input">
+                    <form id="chats-form">
+                        <input type="text" id="chats-input" placeholder="Type a message..." required>
+                        <button id="sendBtn" type="submit">Send</button>
+                    </form>
+                </section>
             </div>
-            <pre id="users-list"> </pre>
-            <form id="chats-form" >
-                <input type="text" id="chats-input" placeholder="Type a message..." required>
-                <button id="sendBtn" type="submit">Send</button>
-            </form>
         </div>
-    </div> 
+    </div>
     <script src="./chat-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
 </body>

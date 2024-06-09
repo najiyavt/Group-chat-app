@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
+const Groups = require('./groups');
+const User = require('./user');
 
 const Messages = sequelize.define('Messages' , {
     
@@ -11,10 +13,5 @@ const Messages = sequelize.define('Messages' , {
         type: Sequelize.TEXT,
         allowNull: false
     },
-    timestamp: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW 
-    },
-    
 })
 module.exports = Messages;
