@@ -10,23 +10,36 @@
     <div class="chat-app">
         <header class="chat-header">
             <h1>Group Chat App</h1>
-            <a id="link" href="../login/login.html">Logout</a>
+            <a id="logout" href="../login/login.html">Logout</a>
         </header>
+
         <div class="chat-container">
             <aside class="groups">
                 <button id="createGroupBtn">Create Group</button>
-                <ul id="groups-list"></ul>
-                <div id="groupMembers" style="display: none;">
-                    <h2>Group Members</h2>
-                    <!-- Member list will be appended here -->
+                <button id="deleteGroupBtn">Delete Group</button> 
+
+                <div id="groupList">
+                    <h2 id="grphead">Groups</h2>
+                    <ul id="groups-list"></ul>
                 </div>
             </aside>
+
             <div class="main-content">
-                <div id="group-name" class="group-name"></div>
+                <h2 id="admin"></h2>
+                <h2 id="group-name" class="group-name"></h2>
+                <div class="main-content">
+                    <section id="users-list">
+                        <h2>Users</h2>
+                        <!-- Users will be appended here -->
+                    </section>
+                    <section id="group-members">
+                        <h2>Group Members</h2>
+                        <ul id="group-members-list"></ul>
+                    </section>
+                </div>
                 <main class="chat-box" id="chat-box">
                     <!-- Messages will be appended here -->
                 </main>
-                
                 <section class="message-input">
                     <form id="chats-form">
                         <input type="text" id="chats-input" placeholder="Type a message..." required>
@@ -37,6 +50,9 @@
         </div>
     </div>
     <script src="./chat-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"
+        integrity="sha512-PJa3oQSLWRB7wHZ7GQ/g+qyv6r4mbuhmiDb8BjSFZ8NZ2a42oTtAq5n0ucWAwcQDlikAtkub+tPVCw4np27WCg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>

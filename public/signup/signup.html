@@ -7,18 +7,23 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div class="signup-container">
-        <form id="form" class="signup-form" onsubmit="signupPage(event)">
-            <h2>Sign Up</h2>
-            <label for="name">Name</label>
-            <input type="text" name="name" id="name" placeholder="Enter your name here">
+    <div class="signup-form">
+        <h2>Sign Up</h2>
+        <form id="signupForm" onsubmit="signupPage(event)">
+            <label for="username">Name</label>
+            <input type="text" name="username" id="username" placeholder="Enter your name here" required>
+
             <label for="email">Email</label>
-            <input type="email" name="email" id="email" placeholder="Enter your email here">
+            <input type="email" name="email" id="email" placeholder="Enter your email here" required>
+
             <label for="number">Phone Number</label>
-            <input type="number" name="number" id="number" placeholder="Enter your phone number here">
+            <input type="number" name="number" id="number" placeholder="Enter your phone number here" required>
+
             <label for="password">Password</label>
-            <input type="password" name="password" id="password" placeholder="Enter your password here">
+            <input type="password" name="password" id="password" placeholder="Enter your password here" required>
+
             <button type="submit">Sign up</button>
+
             <p>Already have an account? <a href="../login/login.html">Log in Now</a></p>
         </form>
     </div>

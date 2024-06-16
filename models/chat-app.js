@@ -1,17 +1,16 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
-const Groups = require('./groups');
+const Group = require('./group');
 const User = require('./user');
 
-const Messages = sequelize.define('Messages' , {
+const Message = sequelize.define('Message' , {
     
-    name : {
-        type: Sequelize.STRING , 
-        allowNull: false,
-    },
+    
     chats: {
         type: Sequelize.TEXT,
         allowNull: false
     },
+
+    
 })
-module.exports = Messages;
+module.exports = Message;

@@ -2,12 +2,15 @@ const express = require('express');
 
 const router = express.Router();
 
-const groupControllers = require('../controllers/groups');
-const userAuth = require('../middleware/auth');
+const group = require('../controllers/groups');
+const authentication = require('../middleware/auth');
 
-router.post('/create-group' , userAuth.authenticate , groupControllers.createGroup);
-router.get('/get-group' , userAuth.authenticate , groupControllers.getGroups);
-router.post('/join-group' , userAuth.authenticate , groupControllers.joinGroup);
-router.get('/group-members', userAuth.authenticate , groupControllers.groupMembers);
+router.post('/create-group' , authentication.authenticate , group.createGroup);
+router.get('/get-groups' , authentication.authenticate , group.getAllGroups);
+router.post('/add-user' , authentication.authenticate , group.addUsers)
+router.get('/get-group-members/:groupId' , authentication.authenticate, group.getGroupMembers);
+router.delete('/remove-member' , authentication.authenticate, group.removeGroupMembers);
+router.delete('/delete-group/:groupId' , authentication.authenticate, group.deleteGroup);
+
 
 module.exports = router ;

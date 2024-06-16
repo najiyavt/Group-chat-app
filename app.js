@@ -3,12 +3,24 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
+const path = require('path');
+
+const http = require('http');
+const socketio = require('socket.io');
+const server = http.createServer(app);
+const io = socketio(server);
+
+const chatController = require('./controllers/chat-app');
+
+
 
 app.use(
     cors({
-        origin : 'http://192.168.1.2:5500' ,
+        origin : '*' ,
+        //origin: 'http://localhost:3000',
         credentials : 'true'
 }));
+
 app.use(bodyParser.json());
 
 const sequelize = require('./util/database');
@@ -22,31 +34,36 @@ app.use('/chat-app' , chatRoutes);
 const groupsRoutes= require('./routes/groups');
 app.use('/groups' , groupsRoutes);
 
+// app.use((req, res, next) => {
+//     res.sendFile(path.join(__dirname, `public/${req.url}`));
+// })
+
 const User = require('./models/user');
-const Messages = require('./models/chat-app');
-const Groups = require('./models/groups');
-const GroupMembership = require('./models/groupMembership');
+const Message = require('./models/chat-app');
+const Group = require('./models/group');
+const GroupMember = require('./models/groupmembership');
 
-User.hasMany(Messages , { onDelete: 'CASCADE'});
-Messages.belongsTo(User);
+User.hasMany(Message , { onDelete: 'CASCADE'});
+Message.belongsTo(User);
 
-// User.hasMany(GroupMembership  , { onDelete: 'CASCADE'});
-// GroupMembership.belongsTo(User)
+User.belongsToMany(Group , {through: GroupMember});
+Group.belongsToMany(User , { through: GroupMember});
 
-User.belongsToMany(Groups,{through: 'GroupMembership'});
-Groups.belongsToMany(User , { through: 'GroupMembership'});
+User.hasMany(GroupMember);
+GroupMember.belongsTo(User)
 
-Groups.hasMany(Messages  , { onDelete: 'CASCADE'});
-Messages.belongsTo(Groups);
+Group.hasMany(GroupMember);
+GroupMember.belongsTo(Group);
 
-Groups.hasMany(GroupMembership  , { onDelete: 'CASCADE'});
-GroupMembership.belongsTo(Groups);
+Group.hasMany(Message  , { onDelete: 'CASCADE'});
+Message.belongsTo(Group);
 
 
-sequelize
-    .sync()
-    .then(() => { 
-        app.listen( process.env.PORT)
-        console.log('3000 started working')
+sequelize.sync()
+    .then(result => {
+        app.listen( process.env.PORT || 3000);
+        console.log('Database synchronized');
     })
-  .catch(error => console.log(error));
+    .catch(err => {
+        console.error('Error synchronizing database:', err);
+    });

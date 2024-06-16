@@ -8,7 +8,7 @@ const User = sequelize.define('Users' , {
         allowNull: false,
         primaryKey: true
     },
-    name: {
+    username: {
         type: Sequelize.STRING,
         allowNull: false,
     },
@@ -25,8 +25,7 @@ const User = sequelize.define('Users' , {
         type: Sequelize.STRING,
         allowNull: false,
     }, 
-},{
-    timestamps: true,
+    
 });
 
 module.exports = User;

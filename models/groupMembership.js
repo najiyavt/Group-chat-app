@@ -1,27 +1,23 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 const User = require('./user');
-const Group = require('./groups');
+const Group = require('./group');
 
-const GroupMembership = sequelize.define('GroupMembership', {
-    UserId: {
-        type: Sequelize.INTEGER,
-        references: {
-            model: User,
-            key: 'id'
-        },
-        allowNull: false
-    },
-    GroupId: {
-        type: Sequelize.INTEGER,
-        references: {
-            model: Group,
-            key: 'id'
-        },
-        allowNull: false
-    }
-}, {
-    timestamps: false
+const GroupMember = sequelize.define('GroupMember', {
+      isAdmin: {
+          type: Sequelize.BOOLEAN,
+          defaultValue: false
+      },
+      UserId: {
+          type : Sequelize.INTEGER,
+          allowNull:false,
+
+      },
+      GroupId: {
+          type:Sequelize.INTEGER,
+          allowNull:false,
+      },
+
 });
 
-module.exports = GroupMembership;
+module.exports = GroupMember;

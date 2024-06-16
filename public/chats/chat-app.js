@@ -1,179 +1,290 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const chatsInput = document.getElementById('chats-input');
     const sendBtn = document.getElementById('sendBtn');
     const groupsList = document.getElementById('groups-list');
     const createGroupBtn = document.getElementById('createGroupBtn');
     const groupNameElement = document.getElementById('group-name');
-    const groupMembers = document.getElementById('groupMembers');
+    const chatBox = document.getElementById('chat-box');
+    const adminElement = document.getElementById('admin');
+    const usersListElement = document.getElementById('users-list');
+    const groupMembersListElement = document.getElementById('group-members-list');
+    const deleteGroupBtn = document.getElementById('deleteGroupBtn'); 
 
     let loggedInUser = '';
-    let currentGroupId = null;
-    
-    if(token){
+    let currentGroupId = localStorage.getItem('currentGroupId');
+
+    if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
         loggedInUser = payload.name;
         console.log('Logged in user: ', loggedInUser);
-    }else{
+        adminElement.textContent = `Welcome, ${loggedInUser}`;
+    } else {
         window.location.href = '../login/login.html';
         return;
     }
 
-     // Function to add a message to the chat UI
-    function addMessageToChatUi(message,sender) {
-        const chatBox = document.getElementById('chat-box');
-        const messageElement = document.createElement('div');
-        messageElement.innerHTML = `<strong>${sender === loggedInUser ? 'You' : sender}:</strong> ${message}`;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
-        
+    if (currentGroupId) {
+        fetchMessages(currentGroupId);
+        fetchGroupMembers(currentGroupId);
     }
-
-    addMessageToChatUi('',loggedInUser);
-
-    // Function to fetch messages from local storage
-    async function fetchMessagesFromLocalStorage(groupId){
-        const groupChatMessages = `chatMessages_group_${groupId}`
-        const chats = JSON.parse(localStorage.getItem('chats')) || [];
-        chats.forEach(chat => addMessageToChatUi(chat.chats , chat.name));
-        return chats.length > 0 ? chats[chats.length - 1].id : 0;
-    }
-
-    // Function to save messages to local storage
-    async function saveMessagesToLocalStorage(chats , name , id , groupId){
-        const groupChatMessages = `chatMessages_group_${groupId}`
-        const storedChats = JSON.parse(localStorage.getItem('chats')) || [];
-        if(!storedChats.some(chat => chat.id === id)){
-            storedChats.push({chats,name, id});
-            if(storedChats.length > 10){
-                storedChats.shift();
+    async function fetchUsers() {
+        try {
+            const response = await axios.get(`http://localhost:3000/user/all-users`, {
+                headers: { 'Authorization': token }
+            });
+            console.log('Users:', response.data);
+            const users = response.data.users;
+            if (Array.isArray(users)) {
+                displayUsers(users);
+            } else {
+                console.error('Unexpected response format:', response.data);
             }
-            localStorage.setItem('chats' , JSON.stringify(storedChats));
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            usersListElement.innerHTML = '<p>Failed to load users.</p>';
+        }
+    }
+    
+
+    function displayUsers(users) {
+        usersListElement.innerHTML = '';
+        users.forEach(user => {
+            const userElement = document.createElement('div');
+            userElement.id=`user-${user.id}`;
+            userElement.textContent = `${user.username } `;
+            const isMember = user.groups ? user.groups.some(group => group.id === currentGroupId) : false;
+
+            if (!isMember) {
+                const addButton = document.createElement('button');
+                addButton.textContent = 'Add to Group';
+                addButton.classList.add('add-to-group-btn');
+                addButton.addEventListener('click', () => addToGroup(user.id));
+                userElement.appendChild(addButton);
+            }              
+            usersListElement.appendChild(userElement);
+        });
+    };
+
+    async function addToGroup(userId){
+        if(!currentGroupId){
+            alert("please select a group");
+            return;
+        };
+
+        try{
+            const response = await axios.post(`http://localhost:3000/groups/add-user`, {groupId:Number(currentGroupId),userId}, {headers: { 'Authorization': token } });
+            console.log(response.data)
+            if(response.data.success){
+                alert('User added to the group successfully.');
+                const userElement = document.getElementById(`user-${userId}`);
+                if (userElement) {
+                    const addButton = userElement.querySelector('.add-to-group-btn');
+                    if (addButton) {
+                        addButton.remove();
+                    }
+                }
+                fetchGroupMembers(currentGroupId);
+            } else {
+                alert('Failed to add user to the group.');
+            }
+        } catch (error) {
+            console.error('Error adding user to the group:', error);
+            alert('An error occurred while adding the user to the group.');
+        }
+    }
+    fetchUsers();
+
+    async function fetchGroupMembers(groupId){
+        try{
+            const response = await axios.get(`http://localhost:3000/groups/get-group-members/${groupId}`, {headers: { 'Authorization': token }});
+            const members = response.data.members;
+            console.log('group members' , members);
+            displayGroupMembers(members);
+        } catch (error) {
+            console.error('Error fetching group members:', error);
+            groupMembersListElement.innerHTML = '<p>Failed to load group members.</p>';
         }
     };
 
-    if(currentGroupId){
-        let msgId = fetchMessagesFromLocalStorage(currentGroupId);
-    }
-
-    sendBtn.addEventListener('click',async () => {
-        const chats = chatsInput.value.trim();
-        
-        if(chats && currentGroupId){
-            try {
-                const response = await axios.post(`http://localhost:3000/chat-app/add-chats`, {chats:chats ,groupId:currentGroupId}, {
-                    headers: { 'Authorization': token }
-                });
-                addMessageToChatUi(chats, loggedInUser);
-                saveMessagesToLocalStorage(chats, loggedInUser, response.data.newchat.id);
-                
-                chatsInput.value = '';
-                msgId = response.data.newchat.id;
-            } catch (error) {
-                console.error('Error sending message:', error);
-            }
-        }
-    })
-
-
-    async function fetchMessages(){
-        if(!currentGroupId) return
-        try {
-            const response = await axios.get(`http://localhost:3000/chat-app/get-chats?groupId=${currentGroupId}&lastId=${msgId}`, {
-                headers: { 'Authorization': token }
+    function displayGroupMembers(members){
+        groupMembersListElement.innerHTML='';
+        members.forEach(member => {
+            const memberElement = document.createElement('li');
+            memberElement.textContent = `${member.username} `;
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove member'; 
+            removeBtn.addEventListener('click' , async() => {
+                removeMembersFromGroup(currentGroupId,member.id);
             });
-            response.data.chat.forEach(chat => {
-               addMessageToChatUi(chat.chats , chat.User.name);
-               saveMessagesToLocalStorage(chat.chats , chat.name , chat.id,currentGroupId);
-               msgId = chat.id;
-            });
-        } catch (error) {
-            console.error('Error fetching message:', error);
-            alert('An error occurred while fetching the message');
-        }
-    }
-    //setInterval(fetchMessages, 5000);
+            memberElement.appendChild(removeBtn)
+            groupMembersListElement.appendChild(memberElement);
+        })
+    };
 
-
-    async function fetchGroups(){
+    async function removeMembersFromGroup ( groupId , userId) {
         try{
-            const response = await axios.get('http://localhost:3000/groups/get-group', {
+            const response = await axios.delete('http://localhost:3000/groups/remove-member', {headers: { 'Authorization': token } , data:{ groupId,userId }});
+            console.log('User removed succesffully' , response.data); 
+            fetchGroupMembers(groupId)
+        } catch (error) {
+            console.error('Error removing user:', error);
+            alert('Unable to removing members from group')
+        }
+    }
+
+    async function fetchMessages(groupId) {
+        try {
+            const response = await axios.get(`http://localhost:3000/chat-app/get-chats?groupId=${groupId}`, {
                 headers: { 'Authorization': token }
             });
-            groupsList.innerHTML = '';
-            const groups = response.data.groups;
+            console.log('Fetched messages successfully:', response.data);
+            const messages = response.data.slice(-10);
+            localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
+            updateChatBox(messages);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+            alert('An error occurred while fetching the messages');
+        }
+    }
 
+    function addMessageToChatUi(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.innerHTML = `<strong>${message.sender === loggedInUser ? 'You' : message.sender}:</strong> ${message.text}`;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        groupsList.scrollTop = groupsList.scrollHeight;
+    }
+
+    function saveMessagesToLocalStorage(message, groupId) {
+        let messages = JSON.parse(localStorage.getItem(`group-${groupId}-messages`)) || [];
+        messages.push(message);
+        if (messages.length > 10) {
+            messages = messages.slice(messages.length - 10);
+        }
+        localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
+    }
+
+    function loadMessagesFromLocalStorage(groupId) {
+        const messages = JSON.parse(localStorage.getItem(`group-${groupId}-messages`)) || [];
+        messages.forEach(message => addMessageToChatUi(message));
+    }
+
+    function updateChatBox(messages) {
+        chatBox.innerHTML = '';
+        messages.forEach(message => {
+            const sender = message.User && message.User.username ? message.User.username : 'Unknown';
+            addMessageToChatUi({
+                text: message.chats,
+                sender: sender
+            });
+        });
+    }
+
+    async function fetchGroups() {
+        try {
+            const response = await axios.get('http://localhost:3000/groups/get-groups', {
+                headers: { 'Authorization': token }
+            });
+            const groups = response.data;
+            console.log('Fetched groups:', groups);
+            groupsList.innerHTML = '';
             groups.forEach(group => {
                 const listItem = document.createElement('li');
-                listItem.textContent = group.name;
-                listItem.dataset.groupId = group.id;
-                listItem.addEventListener('click', async () => {
+                listItem.textContent = group.groupName;
+                listItem.classList.add('group-item');
+                listItem.addEventListener('click', () => {
                     currentGroupId = group.id;
-                    groupNameElement.textContent = group.name;
-                    msgId = await fetchMessagesFromLocalStorage();
-                    fetchMessages();
+                    localStorage.setItem('currentGroupId', currentGroupId);
+                    groupNameElement.textContent = group.groupName;
+                    chatBox.innerHTML = '';
+                    loadMessagesFromLocalStorage(group.id);
+                    fetchMessages(group.id);
                 });
-
-                const joinButton = document.createElement('button');
-                joinButton.textContent = 'Join Group';
-                joinButton.addEventListener('click', async () => {
-                    try {
-                        await axios.post(`http://localhost:3000/groups/join-group`, { groupId: currentGroupId }, {
-                            headers: { 'Authorization': token }
-                        });
-                        alert('You have successfully joined the group!');
-                    } catch (error) {
-                        console.error('Error joining group:', error);
-                        alert('Error joining group!');
-                    }
-                });
-
-                const membersButton = document.createElement('button');
-                membersButton.textContent = 'Group Members';
-                membersButton.addEventListener('click', async () => {
-                    try {
-                        const response = await axios.get(`http://localhost:3000/groups/group-members?groupId=${currentGroupId}`, {
-                            headers: { 'Authorization': token }
-                        });
-                        const members = response.data.members;
-                        groupMembers.innerHTML = '<h2>Group Members</h2>';
-                        const memberList = document.createElement('ul');
-                        members.forEach(member => {
-                            const memberItem = document.createElement('li');
-                            memberItem.textContent = member;
-                            memberList.appendChild(memberItem);
-                        });
-                        groupMembers.appendChild(memberList);
-                        groupMembers.style.display = 'block';
-                    } catch (error) {
-                        console.error('Error fetching group members:', error);
-                        alert('Error fetching group members!');
-                    }
-                });
-
-                listItem.appendChild(joinButton);
-                listItem.appendChild(membersButton);
                 groupsList.appendChild(listItem);
             });
+            if (currentGroupId) {
+                const currentGroup = groups.find(group => group.id === parseInt(currentGroupId));
+                if (currentGroup) {
+                    groupNameElement.textContent = currentGroup.groupName;
+                    loadMessagesFromLocalStorage(currentGroupId);
+                    fetchMessages(currentGroupId);
+                }
+            }
         } catch (error) {
             console.error('Error fetching groups:', error);
+            alert('An error occurred while fetching groups');
         }
     }
 
+    fetchGroups();
+
     createGroupBtn.addEventListener('click', async () => {
-        try{
+        try {
             const groupName = prompt("Enter group name");
-            if(!groupName) return ;
-            await axios.post('http://localhost:3000/groups/create-group', { groupName }, {
-                headers: { 'Authorization': token }
-            });
+            if (!groupName) return;
+            const response = await axios.post('http://localhost:3000/groups/create-group', { groupName }, { headers: { 'Authorization': token } });
+            console.log('Group created successfully:', response.data);
             fetchGroups();
         } catch (error) {
             console.error('Error creating group:', error);
-            alert("Error creating group!!!")
+            alert("Error creating group!");
+        }
+    });
+    deleteGroupBtn.addEventListener('click', async () => {
+        const groupId = currentGroupId;
+        if (!groupId) {
+            alert('Please select a group to delete.');
+            return;
+        }
+        try{
+            const response = await axios.delete(`http://localhost:3000/groups/delete-group/${groupId}`  ,  { headers: { 'Authorization': token } });
+            console.log('group deleted succesfully',response.data);
+            currentGroupId=null;
+            localStorage.removeItem('currentGroupId');
+            groupNameElement.textContent='';
+            groupMembersListElement.innerHTML='';
+            chatBox.innerHTML='';
+            fetchGroups();
+        } catch (error) {
+            console.error('Error deleting group:', error);
+            alert("Error delting group!");
+        }
+    })
+
+    sendBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const chats = chatsInput.value.trim();
+
+        if (chats && currentGroupId) {
+            try {
+                const response = await axios.post(`http://localhost:3000/chat-app/add-chats`, {
+                    chats: chats,
+                    groupId: currentGroupId
+                }, {
+                    headers: { 'Authorization': token }
+                });
+                const newMessage = response.data.newMessage;
+                console.log('Sent message successfully:', newMessage);
+                const messageObject = {
+                    text: newMessage.chats,
+                    sender: newMessage.User.username || loggedInUser
+                };
+                addMessageToChatUi(messageObject);
+                saveMessagesToLocalStorage(messageObject, currentGroupId);
+                chatsInput.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message');
+            }
         }
     });
 
-    fetchMessages()
-    fetchGroups();
-})
+    document.getElementById('logout').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentGroupId');
+        window.location.href = '../login/login.html';
+    });
+
+});
