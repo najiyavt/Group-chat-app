@@ -1,11 +1,11 @@
+document.getElementById('loginForm').addEventListener('submit', loginSubmit);
 async function loginSubmit (event) {
     event.preventDefault();
-    const loginDetails = {
-        email:document.getElementById('email').value,
-        password:document.getElementById('password').value
-    }
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
     try{
-        const response = await axios.post(`http://localhost:3000/user/login`, loginDetails);
+        const response = await axios.post(`http://localhost:3000/user/login`, { email, password });
         localStorage.setItem('token',response.data.token);
         console.log('Login details',response);
         alert('Login successfull');
