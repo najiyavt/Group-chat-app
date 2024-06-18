@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
         loggedInUser = payload.name;
-        console.log('Logged in user: ', loggedInUser);
         adminElement.textContent = `Welcome, ${loggedInUser}`;
     } else {
         window.location.href = '../login/login.html';
@@ -33,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await axios.get(`http://localhost:3000/user/all-users`, {
                 headers: { 'Authorization': token }
             });
-            console.log('Users:', response.data);
             const users = response.data.users;
             if (Array.isArray(users)) {
                 displayUsers(users);
@@ -99,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try{
             const response = await axios.get(`http://localhost:3000/groups/get-group-members/${groupId}`, {headers: { 'Authorization': token }});
             const members = response.data.members;
-            console.log('group members' , members);
             displayGroupMembers(members);
         } catch (error) {
             console.error('Error fetching group members:', error);
@@ -125,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function removeMembersFromGroup ( groupId , userId) {
         try{
             const response = await axios.delete('http://localhost:3000/groups/remove-member', {headers: { 'Authorization': token } , data:{ groupId,userId }});
-            console.log('User removed succesffully' , response.data); 
             fetchGroupMembers(groupId)
         } catch (error) {
             console.error('Error removing user:', error);
@@ -138,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await axios.get(`http://localhost:3000/chat-app/get-chats?groupId=${groupId}`, {
                 headers: { 'Authorization': token }
             });
-            console.log('Fetched messages successfully:', response.data);
             const messages = response.data.slice(-10);
             localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
             updateChatBox(messages);
@@ -188,7 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Authorization': token }
             });
             const groups = response.data;
-            console.log('Fetched groups:', groups);
             groupsList.innerHTML = '';
             groups.forEach(group => {
                 const listItem = document.createElement('li');
@@ -225,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const groupName = prompt("Enter group name");
             if (!groupName) return;
             const response = await axios.post('http://localhost:3000/groups/create-group', { groupName }, { headers: { 'Authorization': token } });
-            console.log('Group created successfully:', response.data);
             fetchGroups();
         } catch (error) {
             console.error('Error creating group:', error);
@@ -240,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try{
             const response = await axios.delete(`http://localhost:3000/groups/delete-group/${groupId}`  ,  { headers: { 'Authorization': token } });
-            console.log('group deleted succesfully',response.data);
             currentGroupId=null;
             localStorage.removeItem('currentGroupId');
             groupNameElement.textContent='';
@@ -266,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Authorization': token }
                 });
                 const newMessage = response.data.newMessage;
-                console.log('Sent message successfully:', newMessage);
                 const messageObject = {
                     text: newMessage.chats,
                     sender: newMessage.User.username || loggedInUser

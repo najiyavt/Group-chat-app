@@ -12,8 +12,6 @@ const io = socketio(server);
 
 const chatController = require('./controllers/chat-app');
 
-
-
 app.use(
     cors({
         origin : '*' ,
@@ -34,9 +32,10 @@ app.use('/chat-app' , chatRoutes);
 const groupsRoutes= require('./routes/groups');
 app.use('/groups' , groupsRoutes);
 
-// app.use((req, res, next) => {
-//     res.sendFile(path.join(__dirname, `public/${req.url}`));
-// })
+app.use((req, res, next) => {
+    console.log('url' , req.url)
+    res.sendFile(path.join(__dirname, `public/${req.url}`));
+})
 
 const User = require('./models/user');
 const Message = require('./models/chat-app');

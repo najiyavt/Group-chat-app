@@ -7,7 +7,6 @@ async function loginSubmit (event) {
     try{
         const response = await axios.post(`http://localhost:3000/user/login`, { email, password });
         localStorage.setItem('token',response.data.token);
-        console.log('Login details',response);
         alert('Login successfull');
         window.location.href = '../chats/chat-app.html';
     }catch (error) {
