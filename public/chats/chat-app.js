@@ -22,11 +22,44 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '../login/login.html';
         return;
     }
+    const socket = io();
+    socket.on('newMessage', (groupId) => {
+        if (currentGroupId === groupId) {
+            fetchMessages(groupId); // Fetch messages for the current group
+        }
+    });
+
+
 
     if (currentGroupId) {
         fetchMessages(currentGroupId);
         fetchGroupMembers(currentGroupId);
-    }
+    };
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const fileInput = document.getElementById('myFile');
+        const file = fileInput.files[0];
+    
+        if (!file) {
+            return alert('Please select a file to upload');
+        }
+    
+        const formData = new FormData();
+        formData.append('myFile', file);
+        formData.append('groupId', currentGroupId);
+        try {
+            const response = await axios.post(`http://localhost:3000/chat-app/uploadFile`,formData,  {headers: { 'Authorization': token } } );
+            console.log(response);
+            fileInput.value = '';
+            fetchMessages(currentGroupId);
+    
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('chat-box').innerText = 'Failed to upload file';
+        }
+    });
     async function fetchUsers() {
         try {
             const response = await axios.get(`http://localhost:3000/user/all-users`, {
