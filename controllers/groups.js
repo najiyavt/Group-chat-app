@@ -76,10 +76,7 @@ exports.getGroupMembers = async(req, res) => {
         console.log(groupId)
         const group = await Groups.findByPk(groupId , {
             include:[
-                {
-                    model:User,
-                    through:{attributes:[]}
-                }
+                { model:User , through : { attributes:[] } }
             ]
         });
         if(!group){
@@ -135,7 +132,7 @@ exports.deleteGroup = async(req ,res) => {
             }
         });
         if (!adminUserGroup) {
-            return res.status(403).json({ success: false, message: 'Only admins can rdelete the group.' });
+            return res.status(404).json({ success: false, message: 'Only admins can rdelete the group.' });
         }
         const result = await Groups.destroy({
             where: {

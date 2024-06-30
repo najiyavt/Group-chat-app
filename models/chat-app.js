@@ -8,7 +8,7 @@ const Message = sequelize.define('Message' , {
     
     chats: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: true
     },
 
     

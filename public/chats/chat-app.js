@@ -22,49 +22,173 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '../login/login.html';
         return;
     }
-    const socket = io();
-    socket.on('newMessage', (groupId) => {
-        if (currentGroupId === groupId) {
-            fetchMessages(groupId); // Fetch messages for the current group
-        }
-    });
-
-
+   
+    // const socket = io();
+    // socket.on('newMessage', (message) => {
+    //     console.log(message)
+    //     if (message.groupId === currentGroupId) {
+    //         console.log(message.groupId ,currentGroupId)
+    //         addMessageToChatUi(message);
+    //         fetchMessages(currentGroupId)
+    //     }
+    // });
 
     if (currentGroupId) {
         fetchMessages(currentGroupId);
         fetchGroupMembers(currentGroupId);
+        //socket.emit('joinGroup', currentGroupId);
     };
 
-    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
 
+    async function fetchMessages(groupId) {
+        try {
+            const response = await axios.get(`http://localhost:3000/chat-app/get-chats?groupId=${groupId}`, {headers: { 'Authorization': token }});
+            const messages = response.data.slice(-10);
+            localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
+            updateChatBox(messages);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+            alert('An error occurred while fetching the messages');
+        }
+    };
+
+    sendBtn.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const chats = chatsInput.value.trim();
+
+        if (chats && currentGroupId) {
+            try {
+                const response = await axios.post(`http://localhost:3000/chat-app/add-chats`, { chats: chats, groupId: currentGroupId }, { headers: { 'Authorization': token }});
+                const newMessage = response.data.newMessage;
+                const messageObject = {
+                    text: newMessage.chats,
+                    sender: newMessage.User.username || loggedInUser,
+                    type: 'text'
+                };
+               // socket.emit('newMessage', { ...messageObject, groupId: currentGroupId });
+                addMessageToChatUi(messageObject);
+                saveMessagesToLocalStorage(messageObject, currentGroupId);
+                chatsInput.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                if (error.response && error.response.status === 403) {
+                    alert('You are not a member of this group. Cannot send message.');
+                } else if (error.response && error.response.status === 404) {
+                    alert('Choose a group please..');
+                }else{
+                    alert('Failed to send message. Please try again.');
+                }
+            }
+        }
+    });
+
+    function saveMessagesToLocalStorage(message, groupId) {
+        let messages = JSON.parse(localStorage.getItem(`group-${groupId}-messages`)) || [];
+        messages.push(message);
+        if (messages.length > 10) {
+            messages = messages.slice(messages.length - 10);
+        }
+        localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
+    }
+    
+
+    function loadMessagesFromLocalStorage(groupId) {
+        const messages = JSON.parse(localStorage.getItem(`group-${groupId}-messages`)) || [];
+        messages.forEach(message => addMessageToChatUi(message));
+    }
+    
+    function addMessageToChatUi(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        if (message.type === 'file') {
+            if (isImageUrl(message.text)) {
+                messageElement.innerHTML = `<strong>${message.sender === loggedInUser ? 'You' : message.sender}:</strong> <img src="${message.text}" alt="Image" style="max-width: 75%; height: auto;">`;
+            } else {
+                messageElement.innerHTML = `<strong>${message.sender === loggedInUser ? 'You' : message.sender}:</strong> <a href="${message.text}" target="_blank">click</a>`;
+            }
+        } else {
+            messageElement.innerHTML = `<strong>${message.sender === loggedInUser ? 'You' : message.sender}:</strong> ${message.text}`;
+        }
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    function isImageUrl(url) {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg'];
+        return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
+    }
+
+    function updateChatBox(messages) {
+        chatBox.innerHTML = '';
+        const urlPattern = /^(https?:\/\/[^\s$.?#].[^\s]*)$/;
+    
+        function getChatType(chat) {
+            if (urlPattern.test(chat)) {
+                return 'file';
+            } else {
+                return 'text';
+            }
+        }
+        
+        messages.forEach(message => {
+            const sender = message.User && message.User.username ? message.User.username : 'Unknown';
+            let messageType = getChatType(message.chats);
+
+            const messageObject = {
+                text: message.chats,
+                sender: sender,
+                type: messageType,
+                url: '',
+                fileName: ''
+            };
+            if (messageType === 'url') {
+                messageObject.url = message.chats;
+            } else if (message.type === 'file') {
+                messageObject.type = 'file';
+                messageObject.url = message.chats;
+                messageObject.fileName = message.fileName;
+            }
+            addMessageToChatUi(messageObject);
+        });
+    }
+
+
+    document.getElementById('uploadFile').addEventListener('click', async (event) => {
+        event.preventDefault();
+        const groupId = currentGroupId;
         const fileInput = document.getElementById('myFile');
         const file = fileInput.files[0];
-    
         if (!file) {
             return alert('Please select a file to upload');
         }
-    
         const formData = new FormData();
         formData.append('myFile', file);
-        formData.append('groupId', currentGroupId);
-        try {
-            const response = await axios.post(`http://localhost:3000/chat-app/uploadFile`,formData,  {headers: { 'Authorization': token } } );
-            console.log(response);
-            fileInput.value = '';
-            fetchMessages(currentGroupId);
+        formData.append('groupId', groupId);
     
+        try {
+            const response = await axios.post('http://localhost:3000/chat-app/uploadFile', formData, {headers: {'Authorization': token,'Content-Type': 'multipart/form-data' } });
+            fileInput.value = ''; 
+            const url = response.data.url;
+            const fileName = response.data.fileName;
+            const messageObject = {
+                sender: loggedInUser,
+                type: 'file',
+                url: url,
+                fileName: fileName             
+            };
+          //  socket.emit('newMessage', { ...messageObject, groupId });
+            addMessageToChatUi(messageObject);
+            
+            saveMessagesToLocalStorage(messageObject, groupId);
         } catch (error) {
-            console.error('Error:', error);
-            document.getElementById('chat-box').innerText = 'Failed to upload file';
+            console.error('Error uploading file:', error);
         }
     });
+    
+
     async function fetchUsers() {
         try {
-            const response = await axios.get(`http://localhost:3000/user/all-users`, {
-                headers: { 'Authorization': token }
-            });
+            const response = await axios.get(`http://localhost:3000/user/all-users`, {headers: { 'Authorization': token }});
             const users = response.data.users;
             if (Array.isArray(users)) {
                 displayUsers(users);
@@ -117,14 +241,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 fetchGroupMembers(currentGroupId);
             } else {
-                alert('Failed to add user to the group.');
+                alert('Failed to add user to the group.');         
             }
         } catch (error) {
             console.error('Error adding user to the group:', error);
-            alert('An error occurred while adding the user to the group.');
+            if (error.response && error.response.status === 403) {
+                alert('Only admin can add users to group.');
+            } else if (error.response && error.response.status === 400) {
+                alert('You are already a member of group.');
+            }else{
+                alert('An error occurred while adding the user to the group.');
+            }
         }
     }
-    fetchUsers();
 
     async function fetchGroupMembers(groupId){
         try{
@@ -158,63 +287,18 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchGroupMembers(groupId)
         } catch (error) {
             console.error('Error removing user:', error);
+            if (error.response && error.response.status === 403) {
+                alert('Only admin can remove users from group.');
+            }else if (error.response && error.response.status === 404) {
+                alert(' not a member of this group.');
+            }
             alert('Unable to removing members from group')
         }
     }
 
-    async function fetchMessages(groupId) {
-        try {
-            const response = await axios.get(`http://localhost:3000/chat-app/get-chats?groupId=${groupId}`, {
-                headers: { 'Authorization': token }
-            });
-            const messages = response.data.slice(-10);
-            localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
-            updateChatBox(messages);
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-            alert('An error occurred while fetching the messages');
-        }
-    }
-
-    function addMessageToChatUi(message) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        messageElement.innerHTML = `<strong>${message.sender === loggedInUser ? 'You' : message.sender}:</strong> ${message.text}`;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        groupsList.scrollTop = groupsList.scrollHeight;
-    }
-
-    function saveMessagesToLocalStorage(message, groupId) {
-        let messages = JSON.parse(localStorage.getItem(`group-${groupId}-messages`)) || [];
-        messages.push(message);
-        if (messages.length > 10) {
-            messages = messages.slice(messages.length - 10);
-        }
-        localStorage.setItem(`group-${groupId}-messages`, JSON.stringify(messages));
-    }
-
-    function loadMessagesFromLocalStorage(groupId) {
-        const messages = JSON.parse(localStorage.getItem(`group-${groupId}-messages`)) || [];
-        messages.forEach(message => addMessageToChatUi(message));
-    }
-
-    function updateChatBox(messages) {
-        chatBox.innerHTML = '';
-        messages.forEach(message => {
-            const sender = message.User && message.User.username ? message.User.username : 'Unknown';
-            addMessageToChatUi({
-                text: message.chats,
-                sender: sender
-            });
-        });
-    }
-
     async function fetchGroups() {
         try {
-            const response = await axios.get('http://localhost:3000/groups/get-groups', {
-                headers: { 'Authorization': token }
-            });
+            const response = await axios.get('http://localhost:3000/groups/get-groups', { headers: { 'Authorization': token } });
             const groups = response.data;
             groupsList.innerHTML = '';
             groups.forEach(group => {
@@ -226,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('currentGroupId', currentGroupId);
                     groupNameElement.textContent = group.groupName;
                     chatBox.innerHTML = '';
+                   // socket.emit('joinGroup' , group.id)
                     loadMessagesFromLocalStorage(group.id);
                     fetchMessages(group.id);
                 });
@@ -245,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    fetchGroups();
 
     createGroupBtn.addEventListener('click', async () => {
         try {
@@ -278,37 +362,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
 
-    sendBtn.addEventListener('click', async (event) => {
-        event.preventDefault();
-        const chats = chatsInput.value.trim();
-
-        if (chats && currentGroupId) {
-            try {
-                const response = await axios.post(`http://localhost:3000/chat-app/add-chats`, {
-                    chats: chats,
-                    groupId: currentGroupId
-                }, {
-                    headers: { 'Authorization': token }
-                });
-                const newMessage = response.data.newMessage;
-                const messageObject = {
-                    text: newMessage.chats,
-                    sender: newMessage.User.username || loggedInUser
-                };
-                addMessageToChatUi(messageObject);
-                saveMessagesToLocalStorage(messageObject, currentGroupId);
-                chatsInput.value = '';
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Failed to send message');
-            }
-        }
-    });
-
     document.getElementById('logout').addEventListener('click', () => {
         localStorage.removeItem('token');
         localStorage.removeItem('currentGroupId');
         window.location.href = '../login/login.html';
     });
+    
+    fetchGroups();
+    fetchUsers()
 
 });

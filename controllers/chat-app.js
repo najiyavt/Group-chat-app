@@ -5,10 +5,11 @@ const GroupMember = require('../models/groupmembership');
 const User= require('../models/user');
 const AWS = require('aws-sdk');
 
-let io;
-exports.init = (socketIoInstance) => {
-    io = socketIoInstance;
-}
+// let io;
+
+// const init = (socketIoInstance) => {
+//     io = socketIoInstance;
+// };
 
 
 const uploadToS3=async(data,filename)=>{
@@ -34,23 +35,38 @@ const uploadToS3=async(data,filename)=>{
         console.log('Upload error', err);
         throw err;
     }
-}
-exports.uploadFile=async(req,res)=>{
+};
+
+
+exports.uploadFile = async(req,res)=>{
     try{
         const { groupId } = req.body;
         const file = req.file;
-        const uploadedFile = await uploadToS3(file.buffer, file.originalname);
-        console.log(uploadedFile.Location)
 
-        const chatRes = await Chats.create({
-            name: req.user.username,
-            chat: uploadedFile.Location,
+        const uploadedFile = await uploadToS3(file.buffer, file.originalname);
+        console.log('Uploaded file URL:', uploadedFile.Location);
+        console.log('Uploaded file name:', file.originalname);
+
+        const newChatMessage = await Chats.create({
+            chats: uploadedFile.Location,
             UserId: req.user.id,
-            GroupId: groupId
+            GroupId: groupId,
+            fileName: file.originalname,
+            username: req.user.username,
         });
 
-        io.to(groupId).emit('newMessage', groupId);
-        res.status(201).json({url:uploadedFile.Location,message:"file posted"});
+        // io.to(groupId).emit('newMessage', {
+        //     sender: req.user.username,
+        //     type: 'file',
+        //     url: uploadedFile.Location,
+        //     fileName: file.originalname
+        // });
+
+        res.status(201).json({ 
+            url: uploadedFile.Location,
+            fileName: file.originalname,
+            message: 'File uploaded successfully'
+         });
     }catch(err){
         console.log(err);
         res.status(500).json({ error: 'Failed to post message' });
@@ -78,6 +94,7 @@ exports.postMessages = async ( req , res) => {
         };
         
         const newMessage = await Chats.create({
+            name: req.user.username,
             UserId:req.user.id ,
             chats:chats ,
             GroupId: groupId
@@ -86,8 +103,11 @@ exports.postMessages = async ( req , res) => {
             where: { id: newMessage.id },
             include: [{ model: User, attributes: ['username'] }]
         });
-        console.log('Message send and stored successfully!',messageWithUser);
-        io.to(groupId).emit('newMessage' , groupId);
+        // io.to(groupId).emit('newMessage', {
+        //     sender: messageWithUser.User.username,
+        //     type: 'text',
+        //     text: messageWithUser.chats
+        // });        
         res.status(201).json({newMessage: messageWithUser , message:"Message sent succesfully" });
     } catch (error) {
         console.error('Error sending message:', error);
@@ -111,7 +131,6 @@ exports.getAllMessages = async (req, res) => {
             }]
         });
         console.log('Message got successfully!', messages);
-
         res.json( messages);
     } catch (error) {
         console.error('Error fetching messages:', error);

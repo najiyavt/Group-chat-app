@@ -5,7 +5,7 @@ async function loginSubmit (event) {
     const password = document.getElementById('password').value;
 
     try{
-        const response = await axios.post(` http://localhost:3000/user/login`, { email, password });
+        const response = await axios.post(`http://localhost:3000/user/login`, { email, password });
         localStorage.setItem('token',response.data.token);
         alert('Login successfull');
         window.location.href = '../chats/chat-app.html';
