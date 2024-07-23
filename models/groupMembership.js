@@ -17,7 +17,6 @@ const GroupMember = sequelize.define('GroupMember', {
           type:Sequelize.INTEGER,
           allowNull:false,
       },
-
 });
 
 module.exports = GroupMember;

@@ -32,10 +32,10 @@
                 </main>
                 <section class="message-input">
                     <form id="chats-form">
-                        <input type="text" id="chats-input" placeholder="Type a message..." required>
+                        <input type="text" id="chats-input" placeholder="Type a message..." >
                         <button id="sendBtn" type="submit">Send</button>
                         <div>
-                            <input type="file" id="myFile" name="myFile" accept=".png, .jpg, .jpeg, .gif, .pdf" required>
+                            <input type="file" id="myFile" name="myFile" accept=".png, .jpg, .jpeg, .gif, .pdf" >
                             <button type="submit" id="uploadFile">Upload File</button>
                         </div>
                     </form>                   
@@ -54,10 +54,8 @@
             </aside>
         </div>
     </div>
-    <!-- <script src="/socket.io/socket.io.js"></script>  -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"
-            integrity="sha512-PJa3oQSLWRB7wHZ7GQ/g+qyv6r4mbuhmiDb8BjSFZ8NZ2a42oTtAq5n0ucWAwcQDlikAtkub+tPVCw4np27WCg=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="./chat-app.js"></script>
 </body>
 </html>

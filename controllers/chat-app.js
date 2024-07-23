@@ -5,11 +5,6 @@ const GroupMember = require('../models/groupmembership');
 const User= require('../models/user');
 const AWS = require('aws-sdk');
 
-// let io;
-
-// const init = (socketIoInstance) => {
-//     io = socketIoInstance;
-// };
 
 
 const uploadToS3=async(data,filename)=>{
@@ -38,7 +33,7 @@ const uploadToS3=async(data,filename)=>{
 };
 
 
-exports.uploadFile = async(req,res)=>{
+exports.uploadFile = (io) => async(req,res)=>{
     try{
         const { groupId } = req.body;
         const file = req.file;
@@ -54,13 +49,7 @@ exports.uploadFile = async(req,res)=>{
             fileName: file.originalname,
             username: req.user.username,
         });
-
-        // io.to(groupId).emit('newMessage', {
-        //     sender: req.user.username,
-        //     type: 'file',
-        //     url: uploadedFile.Location,
-        //     fileName: file.originalname
-        // });
+        io.emit('newMessage' , newChatMessage)
 
         res.status(201).json({ 
             url: uploadedFile.Location,
@@ -75,7 +64,7 @@ exports.uploadFile = async(req,res)=>{
 
 
 
-exports.postMessages = async ( req , res) => {
+exports.postMessages = (io) => async ( req , res) => {
     const {  groupId , chats } = req.body;
     try{
         const isMember = await GroupMember.findOne({
@@ -103,11 +92,7 @@ exports.postMessages = async ( req , res) => {
             where: { id: newMessage.id },
             include: [{ model: User, attributes: ['username'] }]
         });
-        // io.to(groupId).emit('newMessage', {
-        //     sender: messageWithUser.User.username,
-        //     type: 'text',
-        //     text: messageWithUser.chats
-        // });        
+        io.emit('newMessage' , messageWithUser);
         res.status(201).json({newMessage: messageWithUser , message:"Message sent succesfully" });
     } catch (error) {
         console.error('Error sending message:', error);
@@ -137,3 +122,4 @@ exports.getAllMessages = async (req, res) => {
         res.status(500).json({ success: false, error: 'Unable to fetch messages' });
     }
 }
+

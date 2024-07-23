@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "A group chat application with admin superpowers",
   "main": "app.js",
+  "engines": {
+    "node": "14.x"
+  },
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -22,7 +24,7 @@
     "path": "^0.12.7",
     "sequelize": "^6.37.3",
     "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
+    "vercel": "^35.1.0",
     "ws": "^8.17.0"
   },
   "devDependencies": {

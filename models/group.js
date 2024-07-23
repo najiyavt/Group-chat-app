@@ -8,8 +8,6 @@ const Group = sequelize.define("Group" , {
         type: Sequelize.STRING,
         allowNull: false
     },
-    
-    
 });
 
 module.exports = Group;

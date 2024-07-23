@@ -1,8 +1,10 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const chatsInput = document.getElementById('chats-input');
     const sendBtn = document.getElementById('sendBtn');
     const groupsList = document.getElementById('groups-list');
+    const chatsForm = document.getElementById('chats-form')
     const createGroupBtn = document.getElementById('createGroupBtn');
     const groupNameElement = document.getElementById('group-name');
     const chatBox = document.getElementById('chat-box');
@@ -10,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const usersListElement = document.getElementById('users-list');
     const groupMembersListElement = document.getElementById('group-members-list');
     const deleteGroupBtn = document.getElementById('deleteGroupBtn'); 
+    const uploadFileBtn = document.getElementById('uploadFile');
+
 
     let loggedInUser = '';
     let currentGroupId = localStorage.getItem('currentGroupId');
@@ -23,23 +27,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
    
-    // const socket = io();
-    // socket.on('newMessage', (message) => {
-    //     console.log(message)
-    //     if (message.groupId === currentGroupId) {
-    //         console.log(message.groupId ,currentGroupId)
-    //         addMessageToChatUi(message);
-    //         fetchMessages(currentGroupId)
-    //     }
-    // });
 
     if (currentGroupId) {
         fetchMessages(currentGroupId);
         fetchGroupMembers(currentGroupId);
-        //socket.emit('joinGroup', currentGroupId);
     };
 
+    const socket = io('http://localhost:3000');
 
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    
+    socket.on('newMessage', (message) => {
+        console.log('New message received:', message);
+        fetchMessages(currentGroupId);
+    });
+    
     async function fetchMessages(groupId) {
         try {
             const response = await axios.get(`http://localhost:3000/chat-app/get-chats?groupId=${groupId}`, {headers: { 'Authorization': token }});
@@ -52,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    sendBtn.addEventListener('click', async (event) => {
+    chatsForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const chats = chatsInput.value.trim();
 
@@ -65,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     sender: newMessage.User.username || loggedInUser,
                     type: 'text'
                 };
-               // socket.emit('newMessage', { ...messageObject, groupId: currentGroupId });
                 addMessageToChatUi(messageObject);
                 saveMessagesToLocalStorage(messageObject, currentGroupId);
                 chatsInput.value = '';
@@ -153,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    document.getElementById('uploadFile').addEventListener('click', async (event) => {
+    uploadFileBtn.addEventListener('click', async (event) => {
         event.preventDefault();
         const groupId = currentGroupId;
         const fileInput = document.getElementById('myFile');
@@ -176,9 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: url,
                 fileName: fileName             
             };
-          //  socket.emit('newMessage', { ...messageObject, groupId });
             addMessageToChatUi(messageObject);
-            
             saveMessagesToLocalStorage(messageObject, groupId);
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -310,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('currentGroupId', currentGroupId);
                     groupNameElement.textContent = group.groupName;
                     chatBox.innerHTML = '';
-                   // socket.emit('joinGroup' , group.id)
                     loadMessagesFromLocalStorage(group.id);
                     fetchMessages(group.id);
                 });
